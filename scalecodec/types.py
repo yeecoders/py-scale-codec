@@ -347,6 +347,12 @@ class CompactMoment(CompactU32):
         return self.value.isoformat()
 
 
+class ShardInfo(U16):
+    type_string = 'ShardInfo<ShardNum>'
+pass
+
+
+
 class BoxProposal(ScaleType):
     type_string = 'Box<Proposal>'
 
@@ -484,6 +490,10 @@ class BalanceOf(Balance):
 
 
 class BlockNumber(U64):
+    pass
+
+
+class ShardNum(U64):
     pass
 
 

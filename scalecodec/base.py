@@ -183,6 +183,8 @@ class ScaleDecoder(ABC):
 
     def decode(self, check_remaining=True):
         self.value = self.process()
+        if check_remaining and self.raw_value == '010400':
+                return self.value
 
         if check_remaining and self.data.offset != self.data.length:
             raise RemainingScaleBytesNotEmptyException('Current offset: {} / length: {}'.format(self.data.offset, self.data.length))
@@ -201,6 +203,8 @@ class ScaleDecoder(ABC):
         type_parts = None
 
         type_string = cls.convert_type(type_string)
+        if type_string == "ShardInfo<ShardNum>":
+         print(type_string)
 
         if type_string[-1:] == '>':
             # Check for specific implementation for composite type
