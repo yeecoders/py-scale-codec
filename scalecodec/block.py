@@ -218,6 +218,7 @@ class EventsDecoder(Vec):
         super().__init__(data, metadata=metadata, **kwargs)
 
     def process(self):
+        print("event process===")
         element_count = self.process_type('Compact<u32>').value
 
         for i in range(0, element_count):
@@ -285,8 +286,15 @@ class EventRecord(ScaleDecoder):
         }
 
 
-class Other(Bytes):
-    pass
+class Other(Struct):
+    type_string = '(Vec<u8>)'
+
+    type_mapping = (
+        ('system', 'U8'),
+        ('consensus', 'U8'),
+        ('sharding', 'U8'),
+        ('crfg', 'U8'),
+    )
 
 
 class AuthoritiesChange(Vec):
@@ -331,7 +339,8 @@ class PreRuntime(Struct):
 
 class LogDigest(Enum):
 
-    value_list = ['Other', 'AuthoritiesChange', 'ChangesTrieRoot', 'SealV0', 'Consensus', 'Seal', 'PreRuntime']
+    value_list = ['Other', 'AuthoritiesChange', 'ChangesTrieRoot', 'Seal', 'Consensus', 'SealV0', 'PreRuntime']
+    #value_list = ['System', 'Consensus', 'Sharding', 'Crfg']
 
     def __init__(self, data, **kwargs):
         self.log_type = None

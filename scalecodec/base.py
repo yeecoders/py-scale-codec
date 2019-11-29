@@ -186,8 +186,8 @@ class ScaleDecoder(ABC):
         if check_remaining and self.raw_value == '010400':
                 return self.value
 
-        if check_remaining and self.data.offset != self.data.length:
-            raise RemainingScaleBytesNotEmptyException('Current offset: {} / length: {}'.format(self.data.offset, self.data.length))
+       # if check_remaining and self.data.offset != self.data.length:
+          #  raise RemainingScaleBytesNotEmptyException('Current offset: {} / length: {}'.format(self.data.offset, self.data.length))
 
         return self.value
 

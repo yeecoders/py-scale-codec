@@ -346,12 +346,34 @@ class CompactMoment(CompactU32):
     def serialize(self):
         return self.value.isoformat()
 
+class RewardPlan(Struct):
+    type_string = 'RewardPlan<N, AccountId, Balance>'
+    type_mapping = (
+        ('block_number', 'BlockNumber'),
+        ('coinbase', 'AccountId'),
+        ('block_reward', 'Balance'),
+        ('fee_reward', 'Balance'),
+    )
 
-class ShardInfo(U16):
+
+
+
+class PowInfo(U16):
+    type_string = 'PowInfo<AccountId>'
+
+    type_mapping = (
+        ('coinbase', 'AccountId'),
+        ('reward_condition', 'RewardCondition'),
+    )
+
+
+
+class ShardInfo(Struct):
     type_string = 'ShardInfo<ShardNum>'
-pass
-
-
+    type_mapping = (
+        ('num', 'U16'),
+        ('count', 'U16'),
+    )
 
 class BoxProposal(ScaleType):
     type_string = 'Box<Proposal>'
