@@ -514,7 +514,8 @@ class BalanceOf(Balance):
 class BlockNumber(U64):
     pass
 
-
+class FinalNum(U64):
+    pass
 class ShardNum(U64):
     pass
 
