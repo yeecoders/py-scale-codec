@@ -18,8 +18,9 @@
 
 import datetime
 import unittest
+from _blake2 import blake2b
 
-from scalecodec import CompactU32
+from scalecodec import CompactU32, U16
 from scalecodec.base import ScaleDecoder, ScaleBytes, RemainingScaleBytesNotEmptyException, \
     InvalidScaleTypeValueException
 from scalecodec.block import ExtrinsicsDecoder, MetadataDecoder
@@ -116,58 +117,121 @@ class TestScaleTypes(unittest.TestCase):
 
     # TODO make type_index in Metadatadecoder and add tests if all types are supported
 
+    def test_originhash(self):
+        a = '290281ff927b69286c0137e2ff66c6e561f721d2e6a2e9b92402d2eed7aebdca99005c705efcd6ebd1991697769d82513325a49276b6044142054fa9617a015b3c5af102ccfbce2b75c1e6627b743b3ff35933b926532d51f3287bbc180072d50f71bd0b1c65020400ffaa5f074351d8eadc796e3e25303db8813517f67294740d44d55e2dd63de61b5e516b'
+        b = blake2b(bytearray.fromhex(a), digest_size=32).digest().hex()
+        print(b)
+
     def test_log(self):
-        #logs in header
+        # logs in header
         # "logs": [
-        #     "0x0018020000000400",
+        #     "0x00 1802 000000 0400",
+        #      0x00 1802 000100 0400
+        #      0x00 1802 000200 0400
         #     "0x00ed03030000000000000000001850907ff82b2d1fb8d7d07fe9cc0c6e33454e1e98abce6714d20567fbf33be078010000000000000050907ff82b2d1fb8d7d07fe9cc0c6e33454e1e98abce6714d20567fbf33be078010000000000000050907ff82b2d1fb8d7d07fe9cc0c6e33454e1e98abce6714d20567fbf33be078010000000000000050907ff82b2d1fb8d7d07fe9cc0c6e33454e1e98abce6714d20567fbf33be078010000000000000050907ff82b2d1fb8d7d07fe9cc0c6e33454e1e98abce6714d20567fbf33be078010000000000000050907ff82b2d1fb8d7d07fe9cc0c6e33454e1e98abce6714d20567fbf33be0780100000000000000",
         #     "0x002804008a0b000000000000",
         #     "0x0459656521750350907ff82b2d1fb8d7d07fe9cc0c6e33454e1e98abce6714d20567fbf33be078dee67cd3e950d9ecc58898fd0f94e94865f7e226e66e66b43683ed870c0100004e2989c06e01000002287965652d7377697463689f3314763de4e45e5c609767a4f860515a29503f50096bfa7ee3d81d769be64f2b15000000000000085afb1172f6a2a4611043764a56a6ce759f30fefb156293b4e26ba1a42b4f8ce278c86f19241fe16267983b35b4994d824acf5f8884aa98dabfbaed6ae41d28e185c09af929492a871e4fae32d9d5c36e352471cd659bcdb61de08f1722acc3b1"
         # ]
 
-        input = "0x0459656521750350907ff82b2d1fb8d7d07fe9cc0c6e33454e1e98abce6714d20567fbf33be078dee67cd3e950d9ecc58898fd0f94e94865f7e226e66e66b43683ed870c0100004e2989c06e01000002287965652d7377697463689f3314763de4e45e5c609767a4f860515a29503f50096bfa7ee3d81d769be64f2b15000000000000085afb1172f6a2a4611043764a56a6ce759f30fefb156293b4e26ba1a42b4f8ce278c86f19241fe16267983b35b4994d824acf5f8884aa98dabfbaed6ae41d28e185c09af929492a871e4fae32d9d5c36e352471cd659bcdb61de08f1722acc3b1"
+        input = '0x0459656521750350907ff82b2d1fb8d7d07fe9cc0c6e33454e1e98abce6714d20567fbf33be078dee67cd3e950d9ecc58898fd0f94e94865f7e226e66e66b43683ed870c0100004e2989c06e01000002287965652d7377697463689f3314763de4e45e5c609767a4f860515a29503f50096bfa7ee3d81d769be64f2b15000000000000085afb1172f6a2a4611043764a56a6ce759f30fefb156293b4e26ba1a42b4f8ce278c86f19241fe16267983b35b4994d824acf5f8884aa98dabfbaed6ae41d28e185c09af929492a871e4fae32d9d5c36e352471cd659bcdb61de08f1722acc3b1'
         log = bytearray.fromhex(input[2:])
+
         digestItemType = log[0:1]
         print(digestItemType.hex())
-        print(log.hex())
-        data = log[10:19]
-        print(data.hex())
-        c = CompactU32(ScaleBytes(data))
+
+        data = input[10:20]
+        print(data)  # 7503c93b27
+
+        c = CompactU32(ScaleBytes(bytearray.fromhex(data)))
+
+        obj = ScaleDecoder.get_decoder_class('Compact<u32>', ScaleBytes(bytearray.fromhex(data)))
+        obj.decode()
+        print(obj.value)
         veclen = c.process()
         print(veclen)
-        # compactLen =
+        compactLen = None
+        if veclen <= 0b00111111:
+            compactLen = 1
+        elif veclen <= 0b0011111111111111:
+            compactLen = 2
 
+        elif veclen <= 0b00111111111111111111111111111111:
+            compactLen = 4
+        else:
+            compactLen = 5
+        print(compactLen)
+
+        len = 2 + 8 + compactLen * 2 + 64 + 64 + 16
+        print(len)
+
+        # workProofType = U16(bytearray.fromhex())
+        # workProofType.process()
+
+        print(input[len:len+2])
+
+        workProofType = ScaleDecoder.get_decoder_class('U16', ScaleBytes('0x'+str(input[len:len+2])))
+        workProofType.decode()
+        print(workProofType.value)
+
+
+        workProofOffset = 2 + 8 + compactLen * 2 + 64 + 64 + 16 + 2
+        print(workProofOffset)
+
+        if workProofType.value == 2:
+            dataforextraDataLen = input[workProofOffset:(workProofOffset+170)]
+
+            extraDataLen = ScaleDecoder.get_decoder_class('Compact<u32>', ScaleBytes(bytearray.fromhex(dataforextraDataLen)))
+            extraDataLen.decode()
+            print(extraDataLen.value)
+
+            if extraDataLen.value <= 0b00111111:
+                compactLen = 1
+            elif extraDataLen <= 0b0011111111111111:
+                compactLen = 2
+
+            elif extraDataLen.value <= 0b00111111111111111111111111111111:
+                compactLen = 4
+            else:
+                compactLen = 5
+            print(compactLen)
+            print("--------------")
+            mlen = workProofOffset + compactLen * 2 + extraDataLen.value * 2
+            print(mlen)
+            merkleRoot = input[mlen:mlen+64]
+            print(merkleRoot)
+
+    #  input.substr(2 + 8 + compactLen * 2 + 64 + 64 + 16, 2);
 
     # decode digest-log example in javascript
-    
+
     # decodePowSeal(input) {
-	# 	input = input.replace('0x', '')
-	# 	let digestItemType = decode(hexToBytes(input.substr(0, 2)), 'u16');
-	# 	if (digestItemType != 4) { //consensus
-	# 		return null;
-	# 	}
-    #
-	# 	let vecLen = decode(hexToBytes(input.substr(2 + 8, 10)), 'Compact<u32>');
-	# 	let compactLen = api.utils.compactLen(vecLen);
-    #
-	# 	let timestamp = decode(hexToBytes(input.substr(2 + 8 + compactLen * 2 + 64 + 64, 16)), 'u64');
-    #
-	# 	let workProofType = decode(hexToBytes(input.substr(2 + 8 + compactLen * 2 + 64 + 64 + 16, 2)), 'u16');
-    #
-	# 	let workProof = {};
-    #
-	# 	let workProofOffset = 2 + 8 + compactLen * 2 + 64 + 64 + 16 + 2;
-    #
-	# 	if (workProofType == 1) {
-	# 		//do nothing
-    #
-	# 	} else if (workProofType == 2) {
-	# 		let extraDataLen = decode(hexToBytes(input.substr(workProofOffset, 10)), 'Compact<u32>');
-	# 		compactLen = api.utils.compactLen(extraDataLen);
-    #
-	# 		let merkleRoot = input.substr(workProofOffset + compactLen * 2 + extraDataLen * 2, 64);
-    #
-	# 		workProof = {
-	# 			extraDataLen,
-	# 			merkleRoot,
-	# 		}
+# 	input = input.replace('0x', '')
+# 	let digestItemType = decode(hexToBytes(input.substr(0, 2)), 'u16');
+# 	if (digestItemType != 4) { //consensus
+# 		return null;
+# 	}
+#
+# 	let vecLen = decode(hexToBytes(input.substr(2 + 8, 10)), 'Compact<u32>');
+# 	let compactLen = api.utils.compactLen(vecLen);
+#
+# 	let timestamp = decode(hexToBytes(input.substr(2 + 8 + compactLen * 2 + 64 + 64, 16)), 'u64');
+#
+# 	let workProofType = decode(hexToBytes(input.substr(2 + 8 + compactLen * 2 + 64 + 64 + 16, 2)), 'u16');
+#
+# 	let workProof = {};
+#
+# 	let workProofOffset = 2 + 8 + compactLen * 2 + 64 + 64 + 16 + 2;
+#
+# 	if (workProofType == 1) {
+# 		//do nothing
+#
+# 	} else if (workProofType == 2) {
+# 		let extraDataLen = decode(hexToBytes(input.substr(workProofOffset, 10)), 'Compact<u32>');
+# 		compactLen = api.utils.compactLen(extraDataLen);
+#
+# 		let merkleRoot = input.substr(workProofOffset + compactLen * 2 + extraDataLen * 2, 64);
+#
+# 		workProof = {
+# 			extraDataLen,
+# 			merkleRoot,
+# 		}
