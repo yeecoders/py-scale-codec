@@ -358,12 +358,12 @@ class RewardPlan(Struct):
 
 
 
-class PowInfo(U16):
+class PowInfo(Struct):
     type_string = 'PowInfo<AccountId>'
 
     type_mapping = (
         ('coinbase', 'AccountId'),
-        ('reward_condition', 'RewardCondition'),
+        ('reward_condition', 'U16'),
     )
 
 

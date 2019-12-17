@@ -286,14 +286,20 @@ class EventRecord(ScaleDecoder):
         }
 
 
+class ShardInfoLog(Struct):
+    type_string = 'ShardInfo<ShardNum>'
+    type_mapping = (
+        ('num', 'U16'),
+        ('count', 'U16'),
+    )
+
+
 class Other(Struct):
     type_string = '(Vec<u8>)'
 
     type_mapping = (
-        ('system', 'U8'),
-        ('consensus', 'U8'),
-        ('sharding', 'U8'),
-        ('crfg', 'U8'),
+        ('sharding', 'ShardInfoLog'),
+
     )
 
 
@@ -338,9 +344,9 @@ class PreRuntime(Struct):
 
 
 class LogDigest(Enum):
-
     value_list = ['Other', 'AuthoritiesChange', 'ChangesTrieRoot', 'Seal', 'Consensus', 'SealV0', 'PreRuntime']
-    #value_list = ['System', 'Consensus', 'Sharding', 'Crfg']
+
+    # value_list = ['System', 'Consensus', 'Sharding', 'Crfg']
 
     def __init__(self, data, **kwargs):
         self.log_type = None
@@ -350,6 +356,22 @@ class LogDigest(Enum):
     def process(self):
         self.index = int(self.get_next_bytes(1).hex())
         self.index_value = self.value_list[self.index]
+
+        if self.data.__str__()[0:10] == '0x00180200':
+            self.data = ScaleBytes('0x' + self.data.__str__()[10:18])
+            self.log_type = self.process_type('ShardInfoLog')
+            return {'type': self.log_type.type_string, 'value': self.log_type.value}
+
+        if self.data.__str__()[0:10] == '0x00280400':
+            self.data = ScaleBytes('0x' + self.data.__str__()[10:26])
+            self.log_type = self.process_type('U64')
+            return {'type': self.log_type.type_string, 'value': self.log_type.value}
+
+        if self.data.__str__()[0:12] == '0x00ed030300':
+            self.data = ScaleBytes('0x' + self.data.__str__()[28:])
+            self.log_type = self.process_type('Vec<(SessionKey, u64)>')
+            return {'type': 'Finalitytrack', 'value': self.log_type.value}
+
         self.log_type = self.process_type(self.value_list[self.index])
         return {'type': self.log_type.type_string, 'value': self.log_type.value}
 
