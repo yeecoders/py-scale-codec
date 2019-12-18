@@ -365,12 +365,12 @@ class LogDigest(Enum):
         if self.data.__str__()[0:10] == '0x00280400':
             self.data = ScaleBytes('0x' + self.data.__str__()[10:26])
             self.log_type = self.process_type('U64')
-            return {'type': self.log_type.type_string, 'value': self.log_type.value}
+            return {'type': 'Finalitytracker', 'value': self.log_type.value}
 
         if self.data.__str__()[0:12] == '0x00ed030300':
             self.data = ScaleBytes('0x' + self.data.__str__()[28:])
             self.log_type = self.process_type('Vec<(SessionKey, u64)>')
-            return {'type': 'Finalitytrack', 'value': self.log_type.value}
+            return {'type': 'Crfg', 'value': self.log_type.value}
 
         self.log_type = self.process_type(self.value_list[self.index])
         return {'type': self.log_type.type_string, 'value': self.log_type.value}

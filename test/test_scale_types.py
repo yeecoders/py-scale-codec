@@ -217,10 +217,19 @@ class TestScaleTypes(unittest.TestCase):
             print(merkleRoot)
 
     def test_log1(self):
-
+        # system 0
+        # sharding 2
+        # Crag 3
+        # Finalitytrack 4
         # m = ScaleDecoder.get_decoder_class('Compact<u32>', ScaleBytes('0x18'))
         # m.decode()
         # print(m.value)
+        # 0x00 -other
+        # 18   -6个字节
+        # 02   -shard
+        # 00   -第一个枚举
+        # 0000 -分片号
+        # 0400 -分片总数
         log_shard = '0x0018020003000400'
         if log_shard[0:10] == '0x00180200':
             shard = '0x' + log_shard[10:18]
@@ -229,7 +238,11 @@ class TestScaleTypes(unittest.TestCase):
             x.decode()
             print(x.value)
             print('------------')
-
+        # 0x00-other
+        # 28-10字节
+        # 04-Finalitytrack
+        # 00-枚举
+        # 6983000000000000 -区块高度
         log_Finalitytrack = '0x002804006983000000000000'
         if log_Finalitytrack[0:10] == '0x00280400':
             obj = ScaleDecoder.get_decoder_class('U64', ScaleBytes("0x6983000000000000"))
@@ -242,9 +255,9 @@ class TestScaleTypes(unittest.TestCase):
         # 00   --enum AuthoritiesChangeSignal
         # 00 00 00 00 00 00 00 00  	AuthoritiesChangeSignal(N, Vec<(SessionKey, u64)>) 的N（延迟区块高度）
         # 18 -- Vec < (SessionKey, u64) > 有6个此类型的元组
-        log_Finalitytrack = '0x00ed030300000000000000000018c93b279b1bff3ab37ba8a10029e2073b898bc87b66f826c13dfc19973f13ae130100000000000000c93b279b1bff3ab37ba8a10029e2073b898bc87b66f826c13dfc19973f13ae130100000000000000c93b279b1bff3ab37ba8a10029e2073b898bc87b66f826c13dfc19973f13ae130100000000000000c93b279b1bff3ab37ba8a10029e2073b898bc87b66f826c13dfc19973f13ae130100000000000000c93b279b1bff3ab37ba8a10029e2073b898bc87b66f826c13dfc19973f13ae130100000000000000c93b279b1bff3ab37ba8a10029e2073b898bc87b66f826c13dfc19973f13ae130100000000000000'
-        if log_Finalitytrack[0:12] == '0x00ed030300':
-            final = '0x' + log_Finalitytrack[28:]
+        log_crfg = '0x00ed030300000000000000000018c93b279b1bff3ab37ba8a10029e2073b898bc87b66f826c13dfc19973f13ae130100000000000000c93b279b1bff3ab37ba8a10029e2073b898bc87b66f826c13dfc19973f13ae130100000000000000c93b279b1bff3ab37ba8a10029e2073b898bc87b66f826c13dfc19973f13ae130100000000000000c93b279b1bff3ab37ba8a10029e2073b898bc87b66f826c13dfc19973f13ae130100000000000000c93b279b1bff3ab37ba8a10029e2073b898bc87b66f826c13dfc19973f13ae130100000000000000c93b279b1bff3ab37ba8a10029e2073b898bc87b66f826c13dfc19973f13ae130100000000000000'
+        if log_crfg[0:12] == '0x00ed030300':
+            final = '0x' + log_crfg[28:]
             #print(final)
             oy = ScaleDecoder.get_decoder_class('Vec<(SessionKey, u64)>', ScaleBytes(final))
             oy.decode()
@@ -254,7 +267,7 @@ class TestScaleTypes(unittest.TestCase):
         # ox.decode()
         # print(ox.value)
     def test_log2(self):
-        log_digest = LogDigest(ScaleBytes('0x04596565217503c93b279b1bff3ab37ba8a10029e2073b898bc87b66f826c13dfc19973f13ae1374dbe4e0a76174a060f413b2b41faef181643f5d87aca28203b253dec8160000ee1fcc126f01000002287965652d7377697463689f12aa2df04117d314930f7c9cf85607fce5b748de74476d1720ec708e52eb89019c050000000000083edced7e119521739ada9d663fbf44a99265977fd0152f1fbfbfd40836c930e70b7cdda44d2c7e6d1b116c9878daf25ab02fecb5cc84468cb38d0a8ac03dad1885c09af929492a871e4fae32d9d5c36e352471cd659bcdb61de08f1722acc3b1'))
+        log_digest = LogDigest(ScaleBytes('0x002804005179000000000000'))
         log_digest.decode()
         print(log_digest.value)
 
