@@ -375,6 +375,13 @@ class ShardInfo(Struct):
         ('count', 'U16'),
     )
 
+class RelayTypes(ScaleType):
+    type_string = '[u8; 1]'
+
+    def process(self):
+        value = self.get_next_bytes(1)
+        return value
+
 class BoxProposal(ScaleType):
     type_string = 'Box<Proposal>'
 
