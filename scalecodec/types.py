@@ -70,7 +70,6 @@ class Compact(ScaleType):
 
 # Example of specialized composite implementation for performance improvement
 class CompactU32(Compact):
-
     type_string = 'Compact<u32>'
 
     def process(self):
@@ -95,8 +94,10 @@ class CompactU32(Compact):
 
         else:
             for bytes_length in range(5, 68):
-                if 2 ** (8 * (bytes_length-1)) <= value < 2 ** (8 * bytes_length):
-                    self.data = ScaleBytes(bytearray(((bytes_length - 4) << 2 | 0b11).to_bytes(1, 'little') + value.to_bytes(bytes_length, 'little')))
+                if 2 ** (8 * (bytes_length - 1)) <= value < 2 ** (8 * bytes_length):
+                    self.data = ScaleBytes(bytearray(
+                        ((bytes_length - 4) << 2 | 0b11).to_bytes(1, 'little') + value.to_bytes(bytes_length,
+                                                                                                'little')))
                     break
             else:
                 raise ValueError('{} out of range'.format(value))
@@ -106,7 +107,6 @@ class CompactU32(Compact):
 
 class Option(ScaleType):
     def process(self):
-
         option_byte = self.get_next_bytes(1)
 
         if self.sub_type and option_byte != b'\x00':
@@ -116,7 +116,6 @@ class Option(ScaleType):
 
 
 class Bytes(ScaleType):
-
     type_string = 'Vec<u8>'
 
     def process(self):
@@ -131,11 +130,9 @@ class Bytes(ScaleType):
 
 
 class OptionBytes(ScaleType):
-
     type_string = 'Option<Vec<u8>>'
 
     def process(self):
-
         option_byte = self.get_next_bytes(1)
 
         if option_byte != b'\x00':
@@ -148,7 +145,6 @@ class OptionBytes(ScaleType):
 class String(ScaleType):
 
     def process(self):
-
         length = self.process_type('Compact<u32>').value
         value = self.get_next_bytes(length)
 
@@ -158,7 +154,6 @@ class String(ScaleType):
 class HexBytes(ScaleType):
 
     def process(self):
-
         length = self.process_type('Compact<u32>').value
 
         return '0x{}'.format(self.get_next_bytes(length).hex())
@@ -170,7 +165,7 @@ class U8(ScaleType):
         return self.get_next_u8()
 
     def encode(self, value):
-        if 0 <= value <= 2**8 - 1:
+        if 0 <= value <= 2 ** 8 - 1:
             self.data = ScaleBytes(bytearray(int(value).to_bytes(1, 'little')))
         else:
             raise ValueError('{} out of range for u8'.format(value))
@@ -184,7 +179,7 @@ class U16(ScaleType):
         return int.from_bytes(self.get_next_bytes(2), byteorder='little')
 
     def encode(self, value):
-        if 0 <= value <= 2**16 - 1:
+        if 0 <= value <= 2 ** 16 - 1:
             self.data = ScaleBytes(bytearray(int(value).to_bytes(2, 'little')))
         else:
             raise ValueError('{} out of range for u16'.format(value))
@@ -198,7 +193,7 @@ class U32(ScaleType):
         return int.from_bytes(self.get_next_bytes(4), byteorder='little')
 
     def encode(self, value):
-        if 0 <= value <= 2**32 - 1:
+        if 0 <= value <= 2 ** 32 - 1:
             self.data = ScaleBytes(bytearray(int(value).to_bytes(4, 'little')))
         else:
             raise ValueError('{} out of range for u32'.format(value))
@@ -212,7 +207,7 @@ class U64(ScaleType):
         return int(int.from_bytes(self.get_next_bytes(8), byteorder='little'))
 
     def encode(self, value):
-        if 0 <= value <= 2**64 - 1:
+        if 0 <= value <= 2 ** 64 - 1:
             self.data = ScaleBytes(bytearray(int(value).to_bytes(8, 'little')))
         else:
             raise ValueError('{} out of range for u64'.format(value))
@@ -346,6 +341,7 @@ class CompactMoment(CompactU32):
     def serialize(self):
         return self.value.isoformat()
 
+
 class RewardPlan(Struct):
     type_string = 'RewardPlan<N, AccountId, Balance>'
     type_mapping = (
@@ -354,8 +350,6 @@ class RewardPlan(Struct):
         ('block_reward', 'Balance'),
         ('fee_reward', 'Balance'),
     )
-
-
 
 
 class PowInfo(Struct):
@@ -367,7 +361,6 @@ class PowInfo(Struct):
     )
 
 
-
 class ShardInfo(Struct):
     type_string = 'ShardInfo<ShardNum>'
     type_mapping = (
@@ -375,12 +368,28 @@ class ShardInfo(Struct):
         ('count', 'U16'),
     )
 
+
 class RelayTypes(ScaleType):
     type_string = '[u8; 1]'
 
     def process(self):
         value = self.get_next_bytes(1)
         return value
+
+
+class AssetId(CompactU32):
+    type_string = 'CompactU<u32>'
+
+    def process(self):
+        return super().process()
+
+
+class Decimals(CompactU32):
+    type_string = 'CompactU<u32>'
+
+    def process(self):
+        return super().process()
+
 
 class BoxProposal(ScaleType):
     type_string = 'Box<Proposal>'
@@ -393,7 +402,6 @@ class BoxProposal(ScaleType):
         super().__init__(data, **kwargs)
 
     def process(self):
-
         self.call_index = self.get_next_bytes(2).hex()
 
         self.call_module, self.call = self.metadata.call_index[self.call_index]
@@ -521,8 +529,11 @@ class BalanceOf(Balance):
 class BlockNumber(U64):
     pass
 
+
 class FinalNum(U64):
     pass
+
+
 class ShardNum(U64):
     pass
 
@@ -551,6 +562,7 @@ class Vec(ScaleType):
             result.append(element.value)
 
         return result
+
 
 # class BalanceTransferExtrinsic(Decoder):
 #
@@ -599,7 +611,6 @@ class RawAddress(Address):
 
 
 class Enum(ScaleType):
-
     value_list = []
     type_mapping = None
 
@@ -633,7 +644,6 @@ class Enum(ScaleType):
 
 
 class RewardDestination(Enum):
-
     value_list = ['Staked', 'Stash', 'Controller']
 
 
@@ -692,7 +702,6 @@ class EraPoints(Struct):
 
 
 class VoteThreshold(Enum):
-
     value_list = ['SuperMajorityApprove', 'SuperMajorityAgainst', 'SimpleMajority']
 
 
@@ -781,7 +790,6 @@ class ReportIdOf(Hash):
 
 
 class StorageHasher(Enum):
-
     value_list = ['Blake2_128', 'Blake2_256', 'Twox128', 'Twox256', 'Twox128Concat']
 
     def is_blake2_128(self):
@@ -843,7 +851,6 @@ class Heartbeat(Struct):
 
 
 class OpaqueNetworkState(Struct):
-
     type_mapping = (
         ('peerId', 'OpaquePeerId'),
         ('externalAddresses', 'Vec<OpaqueMultiaddr>'),
@@ -859,7 +866,6 @@ class OpaqueMultiaddr(Bytes):
 
 
 class SessionKeysSubstrate(Struct):
-
     type_mapping = (
         ('grandpa', 'AccountId'),
         ('babe', 'AccountId'),
@@ -868,7 +874,6 @@ class SessionKeysSubstrate(Struct):
 
 
 class SessionKeysPolkadot(Struct):
-
     type_mapping = (
         ('grandpa', 'AccountId'),
         ('babe', 'AccountId'),
@@ -878,7 +883,6 @@ class SessionKeysPolkadot(Struct):
 
 
 class LegacyKeys(Struct):
-
     type_mapping = (
         ('grandpa', 'AccountId'),
         ('babe', 'AccountId'),
@@ -892,7 +896,6 @@ class EdgewareKeys(Struct):
 
 
 class QueuedKeys(Struct):
-
     type_string = '(ValidatorId, Keys)'
 
     type_mapping = (
@@ -902,7 +905,6 @@ class QueuedKeys(Struct):
 
 
 class LegacyQueuedKeys(Struct):
-
     type_string = '(ValidatorId, LegacyKeys)'
 
     type_mapping = (
@@ -912,7 +914,6 @@ class LegacyQueuedKeys(Struct):
 
 
 class EdgewareQueuedKeys(Struct):
-
     type_string = '(ValidatorId, EdgewareKeys)'
 
     type_mapping = (
@@ -961,7 +962,6 @@ class BalanceLock(Struct):
 
 
 class WithdrawReasons(Enum):
-
     value_list = ['TransactionPayment', 'Transfer', 'Reserve', 'Fee']
 
 
@@ -972,7 +972,6 @@ class Bidder(Enum):
 
 
 class BlockAttestations(Struct):
-
     type_mapping = (
         ('receipt', 'CandidateReceipt'),
         ('valid', 'Vec<AccountId>'),
@@ -981,7 +980,6 @@ class BlockAttestations(Struct):
 
 
 class IncludedBlocks(Struct):
-
     type_mapping = (
         ('actualNumber', 'BlockNumber'),
         ('session', 'SessionIndex'),
@@ -992,7 +990,6 @@ class IncludedBlocks(Struct):
 
 
 class CandidateReceipt(Struct):
-
     type_mapping = (
         ('parachainIndex', 'ParaId'),
         ('collator', 'AccountId'),
@@ -1021,7 +1018,6 @@ class Conviction(Enum):
 
 
 class EraRewards(Struct):
-
     type_mapping = (
         ('total', 'u32'),
         ('rewards', 'Vec<u32>'),
@@ -1071,6 +1067,7 @@ class WinningDataEntry(Struct):
         ('BalanceOf', 'BalanceOf'),
     )
 
+
 # Edgeware types
 # TODO move to RuntimeConfiguration per network
 
@@ -1080,7 +1077,6 @@ class IdentityType(Bytes):
 
 
 class VoteType(Enum):
-
     type_string = 'voting::VoteType'
 
     value_list = ['Binary', 'MultiOption']
@@ -1117,7 +1113,6 @@ class VoteStage(Enum):
 
 
 class TallyType(Enum):
-
     type_string = 'voting::TallyType'
 
     value_list = ['OnePerson', 'OneCoin']
@@ -1155,7 +1150,6 @@ class DownloadSessionId(U64):
 
 
 class UserInfo(Struct):
-
     type_mapping = (
         ('handle', 'Option<Vec<u8>>'),
         ('avatar_uri', 'Option<Vec<u8>>'),
@@ -1164,7 +1158,6 @@ class UserInfo(Struct):
 
 
 class Role(Enum):
-
     value_list = ['Storage']
 
 
@@ -1242,7 +1235,6 @@ class DownloadState(Enum):
 
 
 class DownloadSession(Struct):
-
     type_mapping = (
         ('content_id', 'ContentId'),
         ('consumer', 'AccountId'),
@@ -1363,7 +1355,6 @@ class CategoryId(U64):
 
 
 class ChildPositionInParentCategory(Struct):
-
     type_mapping = (
         ('parent_id', 'CategoryId'),
         ('child_nr_in_parent_category', 'u32'),
@@ -1444,7 +1435,7 @@ class Offer(Struct):
 
     type_mapping = (
         ('order', 'Order<Balance, AccountId>'),
-        #('sender', 'AccountId'),
+        # ('sender', 'AccountId'),
     )
 
 
@@ -1453,7 +1444,7 @@ class Demand(Struct):
 
     type_mapping = (
         ('order', 'Order<Balance, AccountId>'),
-        #('sender', 'AccountId'), TODO not present in current blocks but referenced in https://github.com/airalab/substrate-node-robonomics/blob/master/res/custom_types.json
+        # ('sender', 'AccountId'), TODO not present in current blocks but referenced in https://github.com/airalab/substrate-node-robonomics/blob/master/res/custom_types.json
     )
 
 
@@ -1463,7 +1454,7 @@ class Liability(Struct):
     type_mapping = (
         ('order', 'Order<Balance, AccountId>'),
         ('promisee', 'AccountId'),
-        #('promisor', 'AccountId'), TODO not present in current blocks but referenced in https://github.com/airalab/substrate-node-robonomics/blob/master/res/custom_types.json
+        # ('promisor', 'AccountId'), TODO not present in current blocks but referenced in https://github.com/airalab/substrate-node-robonomics/blob/master/res/custom_types.json
         ('result', 'Option<Vec<u8>>'),
     )
 
