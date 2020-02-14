@@ -373,19 +373,19 @@ class RelayTypes(ScaleType):
     type_string = '[u8; 1]'
 
     def process(self):
-        value = self.get_next_bytes(1)
+        value = int.from_bytes(self.get_next_bytes(1),'little')
         return value
 
 
 class AssetId(CompactU32):
-    type_string = 'CompactU<u32>'
+    type_string = 'Compact<u32>'
 
     def process(self):
         return super().process()
 
 
 class Decimals(CompactU32):
-    type_string = 'CompactU<u32>'
+    type_string = 'Compact<u32>'
 
     def process(self):
         return super().process()

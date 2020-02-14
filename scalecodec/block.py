@@ -260,6 +260,7 @@ class EventRecord(ScaleDecoder):
         # Decode params
 
         self.event = self.metadata.event_index[self.type][1]
+        print(self.event.name)
         self.event_module = self.metadata.event_index[self.type][0]
 
         for arg_type in self.event.args:
